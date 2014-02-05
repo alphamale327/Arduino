@@ -1,87 +1,14 @@
-// If using an Arduino Mega (1280, 2560 or ADK) in conjunction
-// with an SD card shield designed for conventional Arduinos
-// (Uno, etc.), it's necessary to edit the library file:
-//   libraries/SD/utility/Sd2Card.h
-// Look for this line:
-//   #define MEGA_SOFT_SPI 0
-// change to:
-//   #define MEGA_SOFT_SPI 1
-// This is NOT required if using an SD card breakout interfaced
-// directly to the SPI bus of the Mega (pins 50-53), or if using
-// a non-Mega, Uno-style board.
-
 #include <Adafruit_VC0706.h>
-#include <SD.h>
-
-
-// comment out this line if using Arduino V23 or earlier
 #include <SoftwareSerial.h>         
 
-// uncomment this line if using Arduino V23 or earlier
-//#include <NewSoftSerial.h>       
-//#include <NewSoftSerial.h>
-
-
-// SD card chip select line varies among boards/shields:
-// Adafruit SD shields and modules: pin 10
-// Arduino Ethernet shield: pin 4
-// Sparkfun SD shield: pin 8
-// Arduino Mega w/hardware SPI: pin 53
-// Teensy 2.0: pin 0
-// Teensy++ 2.0: pin 20
 #define chipSelect 10
 
-// Pins for camera connection are configurable.
-// With the Arduino Uno, etc., most pins can be used, except for
-// those already in use for the SD card (10 through 13 plus
-// chipSelect, if other than pin 10).
-// With the Arduino Mega, the choices are a bit more involved:
-// 1) You can still use SoftwareSerial and connect the camera to
-//    a variety of pins...BUT the selection is limited.  The TX
-//    pin from the camera (RX on the Arduino, and the first
-//    argument to SoftwareSerial()) MUST be one of: 62, 63, 64,
-//    65, 66, 67, 68, or 69.  If MEGA_SOFT_SPI is set (and using
-//    a conventional Arduino SD shield), pins 50, 51, 52 and 53
-//    are also available.  The RX pin from the camera (TX on
-//    Arduino, second argument to SoftwareSerial()) can be any
-//    pin, again excepting those used by the SD card.
-// 2) You can use any of the additional three hardware UARTs on
-//    the Mega board (labeled as RX1/TX1, RX2/TX2, RX3,TX3),
-//    but must specifically use the two pins defined by that
-//    UART; they are not configurable.  In this case, pass the
-//    desired Serial object (rather than a SoftwareSerial
-//    object) to the Adafruit_VC0706 constructor.
-
-// Using SoftwareSerial (Arduino 1.0+) or NewSoftSerial (Arduino 0023 & prior):
 #if ARDUINO >= 100
-// On Uno: camera TX connected to pin 8, camera RX to pin 9:
 SoftwareSerial cameraconnection = SoftwareSerial(8, 9);
-// On Mega: camera TX connected to pin 69 (A15), camera RX to pin 9:
-//SoftwareSerial cameraconnection = SoftwareSerial(69, 9);
 #else
 NewSoftSerial cameraconnection = NewSoftSerial(8, 9);
 #endif
 Adafruit_VC0706 cam = Adafruit_VC0706(&cameraconnection);
-
-// Using hardware serial on Mega: camera TX conn. to RX1,
-// camera RX to TX1, no SoftwareSerial object is required:
-//Adafruit_VC0706 cam = Adafruit_VC0706(&Serial1);
-
-//---------------------------------------------------------------
-#include <Wire.h>
-#include <RTClib.h>   //time setting
-
-#define trigPin 7
-#define echoPin 6
-#define light 3
-
-RTC_DS1307 RTC;  // define the Real Time Clock object
-
-char val;
-int duration, distance;
-
-//SoftwareSerial blueToothConnect(4, 5); // RX, TX
-//int bluetoothData; // the data given from Computer
 
 int incomingByte;
 void setup() {
@@ -103,7 +30,7 @@ void setup() {
 #endif
 #endif
 
-  Serial.begin(115200);
+  Serial.begin(57600);
   
   Wire.begin();
   if (!RTC.begin()) {
