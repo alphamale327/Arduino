@@ -1,5 +1,5 @@
-int PIRSensor = 9;
-int light_1 = 5;
+int PIRSensor = 2;
+int light_1 = 9;
 
 
 void setup(){

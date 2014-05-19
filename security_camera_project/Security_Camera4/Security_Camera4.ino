@@ -14,8 +14,8 @@ NewSoftSerial cameraconnection = NewSoftSerial(6, 8);
 
 Adafruit_VC0706 cam = Adafruit_VC0706(&cameraconnection);
 
-#define arduinoLed 13
-#define light 5
+//#define arduinoLed 13
+//#define light 5
 #define voltCheck 0
 
 
@@ -25,7 +25,7 @@ int currentState;
 void setup() {
 //----------------------------------------------------
   pinMode(arduinoLed, OUTPUT);
-  pinMode(light, OUTPUT);
+  //pinMode(light, OUTPUT);
   Serial.begin(57600);
   
   if (cam.begin()) {
@@ -108,7 +108,7 @@ void loop() {
 
 void takePic(){
   cam.setMotionDetect(false); 
-  digitalWrite(light, HIGH);
+  //digitalWrite(light, HIGH);
    //Serial.println("Take a picture in 0.5 sec");
   delay(500);
   cam.takePicture();
@@ -125,7 +125,7 @@ void takePic(){
   Serial.write(-125);
  
   cam.resumeVideo();
-  digitalWrite(light, LOW);
+  //digitalWrite(light, LOW);
   if (currentState == 1){
     cam.setMotionDetect(false);
   }else{
