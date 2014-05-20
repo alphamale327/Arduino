@@ -11,13 +11,13 @@ Adafruit_VC0706 cam = Adafruit_VC0706(&cameraconnection);
 
 //Hardware pins
 #define PIRSensorPin       A5
-#define voltCheck       A0
-#define light           13
+#define voltCheck          A4
+#define light              13
 
 //xbee recieving command pins
 #define camDisablePin      12
 #define camEnablePin       11
-#define takePicPin  10
+#define takePicPin         10
 #define batteryCheckPin    9
 
 volatile boolean camMode = true;
@@ -36,7 +36,7 @@ void PIR_ISR()
    sleep_disable(); 
  
    if(digitalRead(PIRSensorPin) == HIGH && camMode == true) {
-     takePic(); 
+   takePic(); 
    }
 }
 
@@ -53,6 +53,7 @@ void camDisable_ISR()
    sleep_disable(); 
  
    camMode = false;
+   //Serial.write(0xf8);
    digitalWrite(light, LOW);
 }
 
@@ -69,6 +70,7 @@ void camEnable_ISR()
    sleep_disable(); 
  
    camMode = true;
+   //Serial.write(0xf8);
    digitalWrite(light, LOW);
 }
 
@@ -159,7 +161,7 @@ void setup()
   
   
   Serial.flush();
-  delay (5000); // turn on, start the module,  scan room
+  delay (3500); // turn on, start the module,  scan room
 }
 
 // ****************************************
@@ -167,7 +169,7 @@ void setup()
 void loop()
 {
   Serial.flush();
-  delay(1200);
+  delay(1500);
   enterSleep();              
 } // end void loop
 
