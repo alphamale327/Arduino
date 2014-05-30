@@ -1,20 +1,25 @@
-#include <avr/sleep.h>      // powerdown library
-#include <avr/interrupt.h>  // interrupts library
+#define NO_PORTC_PINCHANGES 
+#define NO_PORTD_PINCHANGES 
+
+#include <avr/sleep.h>       // powerdown library
+#include <avr/interrupt.h>   // interrupts library
 #include <Adafruit_VC0706.h> // camera library
 #include <SoftwareSerial.h>  // camera serial change
 #include <PinChangeInt.h>
 
-//cam pins
-// On Uno: camera TX connected to pin A2, camera RX to pin A1:
-SoftwareSerial cameraconnection = SoftwareSerial(A2, A1);
+//Cam pins
+// On Uno: camera TX connected to pin A3, camera RX to pin A2:
+SoftwareSerial cameraconnection = SoftwareSerial(A3, A2);
 Adafruit_VC0706 cam = Adafruit_VC0706(&cameraconnection);
 
 //Hardware pins
-#define PIRSensorPin       A5
-#define voltCheck          A4
-#define light              13
+#define greenLight         A5
+#define redLight           A4
+#define batteryCheck       A0
+
 
 //xbee recieving command pins
+#define PIRSensorPin       13
 #define camDisablePin      12
 #define camEnablePin       11
 #define takePicPin         10
@@ -42,7 +47,6 @@ void PIR_ISR()
 
 void camDisable_ISR()
 {
-   digitalWrite(light, HIGH);
   //disable interrupts while we wake up 
    PCintPort::detachInterrupt(PIRSensorPin);
    PCintPort::detachInterrupt(camDisablePin);
@@ -53,13 +57,14 @@ void camDisable_ISR()
    sleep_disable(); 
  
    camMode = false;
-   //Serial.write(0xf8);
-   digitalWrite(light, LOW);
+   Serial.write(0xf8);
+   digitalWrite(redLight, HIGH);
+   delay(500);
+   digitalWrite(redLight, LOW);
 }
 
 void camEnable_ISR()
 {
-   digitalWrite(light, HIGH);
   //disable interrupts while we wake up 
    PCintPort::detachInterrupt(PIRSensorPin);
    PCintPort::detachInterrupt(camDisablePin);
@@ -70,13 +75,14 @@ void camEnable_ISR()
    sleep_disable(); 
  
    camMode = true;
-   //Serial.write(0xf8);
-   digitalWrite(light, LOW);
+   Serial.write(0xf8);
+   digitalWrite(greenLight, HIGH);
+   delay(500);
+   digitalWrite(greenLight, LOW);
 }
 
 void takePic_ISR()
 {
-   digitalWrite(light, HIGH);
   //disable interrupts while we wake up 
    PCintPort::detachInterrupt(PIRSensorPin);
    PCintPort::detachInterrupt(camDisablePin);
@@ -87,12 +93,13 @@ void takePic_ISR()
    sleep_disable(); 
  
    takePic();
-   digitalWrite(light, LOW);
+   digitalWrite(greenLight, HIGH);
+   delay(1000);
+   digitalWrite(greenLight, LOW);
 }
   
 void batteryCheck_ISR()
 {
-   digitalWrite(light, HIGH);
   //disable interrupts while we wake up 
    PCintPort::detachInterrupt(PIRSensorPin);
    PCintPort::detachInterrupt(camDisablePin);
@@ -103,7 +110,11 @@ void batteryCheck_ISR()
    sleep_disable(); 
  
    batteryLife();    
-   digitalWrite(light, LOW);
+   digitalWrite(redLight, HIGH);
+   digitalWrite(greenLight, HIGH);
+   delay(500);
+   digitalWrite(redLight, LOW);
+   digitalWrite(greenLight, LOW);
 }
 
 //***************************************************
@@ -136,47 +147,55 @@ void enterSleep()
 // set up the pins as Inputs, Outputs, etc.
 void setup()
 {
-  pinMode(light, OUTPUT);
-  pinMode (PIRSensorPin,INPUT);
-  pinMode (camDisablePin,INPUT);
-  pinMode (camEnablePin,INPUT);
-  pinMode (takePicPin,INPUT);
-  pinMode (batteryCheckPin,INPUT);
-  digitalWrite (PIRSensorPin, HIGH);  // internal pullup enabled
+  pinMode(redLight, OUTPUT);
+  pinMode(greenLight, OUTPUT);
+  pinMode(PIRSensorPin,INPUT);
+  pinMode(camDisablePin,INPUT);
+  pinMode(camEnablePin,INPUT);
+  pinMode(takePicPin,INPUT);
+  pinMode(batteryCheckPin,INPUT);
+  digitalWrite(PIRSensorPin, HIGH);  // internal pullup enabled
   Serial.begin(57600);
+  delay(1000);
+  if (!cam.begin()) {
+    digitalWrite(redLight, HIGH);
+    delay(500); 
+    digitalWrite(redLight, LOW);
+    delay(500); 
+    digitalWrite(redLight, HIGH);
+    delay(500); 
+    digitalWrite(redLight, LOW);
+    delay(500);
+    digitalWrite(redLight, HIGH);
+    delay(500); 
+    digitalWrite(redLight, LOW);
+    return;  
+  }
+
+    //cam.setImageSize(VC0706_320x240);        // medium
+    //cam.setImageSize(VC0706_640x480);        // biggest
+    cam.setImageSize(VC0706_160x120);          // small
+    uint8_t imgsize = cam.getImageSize();
   
-  //if (!cam.begin()) {
-  //  Serial.write("No camera found?"); //no camera
-  //  delay(500);
-  //  return;
-  //}
-  
-  // Set the picture size - you can choose one of 640x480, 320x240 or 160x120 
-  // Remember that bigger pictures take longer to transmit!
-  
-  //cam.setImageSize(VC0706_320x240);        // medium
-  //cam.setImageSize(VC0706_640x480);        // biggest
-  cam.setImageSize(VC0706_160x120);          // small
-  uint8_t imgsize = cam.getImageSize();
-  
-  
-  Serial.flush();
-  delay (3500); // turn on, start the module,  scan room
+    digitalWrite(greenLight, HIGH);
+    delay(1000); 
+    digitalWrite(greenLight, LOW);
+    delay(1000); 
+    digitalWrite(redLight, HIGH);
+    delay(1000); 
+    digitalWrite(redLight, LOW);   
 }
 
 // ****************************************
 // setup is done, start program
 void loop()
 {
-  Serial.flush();
-  delay(1500);
+  delay(1000);
   enterSleep();              
 } // end void loop
 
 void takePic(){
-  digitalWrite(light,HIGH);
   //cam.setMotionDetect(false); 
-  //digitalWrite(light, HIGH);
   //Serial.println("Take a picture in 0.5 sec");
   delay(500);
   cam.takePicture();
@@ -192,15 +211,10 @@ void takePic(){
     jpglen -= bytesToRead;
   }  
   cam.resumeVideo();
-  digitalWrite(light, LOW);
 }
 
 void batteryLife() {
-  int value = analogRead(voltCheck);
-  //if(value < 430){
-    //Serial.println("Warning! Please replace a bettery!");
-  //}  
-  //Serial.println(value);
+  int value = analogRead(batteryCheck);
   value = map(value, 210, 900, 0, 100); 
   
   Serial.write(0xf1);
