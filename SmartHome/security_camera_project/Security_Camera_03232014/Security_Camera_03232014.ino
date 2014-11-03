@@ -9,18 +9,14 @@ Adafruit_VC0706 cam = Adafruit_VC0706(&cameraconnection);
 //Hardware pins
 #define greenLight         A5
 #define redLight           A4
-#define batteryCheck       A0
 
 
 //xbee recieving command pins
-#define PIRSensorPin       13
-#define camDisablePin      12
-#define camEnablePin       11
-#define takePicPin         10
-#define batteryCheckPin    9
+#define PIRSensorPin       A1
+#define batteryCheckPin    A0
 
+boolean motionDetection = true;
 int deviceState;
-int currentState;
 
 void setup() {
   pinMode (PIRSensorPin,INPUT);
@@ -62,7 +58,7 @@ void setup() {
 }
  
 void loop() {
- if(digitalRead(PIRSensorPin) == HIGH && currentState != 1) {
+ if(digitalRead(PIRSensorPin) == HIGH && motionDetection == true) {
      takePic(); 
  }
 }
@@ -77,7 +73,7 @@ void serialEvent(){
     case '1':  //disable detecting 
      Serial.write(0xf8);
      deviceState = 10;   //idle state
-     currentState = 1;
+     motionDetection = false;
      digitalWrite(redLight, HIGH);
      delay(500);
      digitalWrite(redLight, LOW);  
@@ -85,7 +81,7 @@ void serialEvent(){
     case '2':  //enable detecting
      Serial.write(0xf8);
      deviceState = 10;  
-     currentState = 2;
+     motionDetection = true;
      digitalWrite(greenLight, HIGH);
      delay(500);
      digitalWrite(greenLight, LOW);
@@ -133,7 +129,7 @@ void takePic(){
 }
 
 void batteryLife() {
-  int value = analogRead(batteryCheck);
+  int value = analogRead(batteryCheckPin);
   //if(value < 430){
     //Serial.println("Warning! Please replace a bettery!");
   //}  
