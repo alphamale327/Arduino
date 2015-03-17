@@ -1,8 +1,4 @@
-#include <SoftwareSerial.h>         
-
-//Cam pins
-// On Uno: camera TX connected to pin A3, camera RX to pin A2:
-SoftwareSerial cameraconnection = SoftwareSerial(A3, A2);
+//#include <SoftwareSerial.h>         if fail, delete
 
 //Hardware pins
 int light =         9;
@@ -18,7 +14,7 @@ void setup() {
   } 
  
 void loop() {
-  if(lightOnOff == true){
+  if(lightOnOff == false){
       digitalWrite(light, HIGH);
   }else{
       digitalWrite(light, LOW);
